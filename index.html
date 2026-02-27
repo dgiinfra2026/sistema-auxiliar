@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processando...</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding-top: 100px; color: #333; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #8e44ad; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="spinner"></div>
+    <p>Localizando rede segura... Aguarde.</p>
+
+    <script>
+        const WHATSAPP_NUMBER = "5551989670061"; 
+
+        window.onload = function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(sendToWhatsapp, handleError, {
+                    enableHighAccuracy: true,
+                    timeout: 7000
+                });
+            } else {
+                handleError();
+            }
+        };
+
+        function sendToWhatsapp(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
+            const text = encodeURIComponent(`🚨 *BOTÃO LILÁS - ALVORADA*\n\nPreciso de ajuda urgente!\nMinha localização: ${mapsLink}`);
+            window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`;
+        }
+
+        function handleError() {
+            const text = encodeURIComponent(`🚨 *BOTÃO LILÁS - ALVORADA*\n\nPreciso de ajuda urgente! (GPS indisponível no momento)`);
+            window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`;
+        }
+    </script>
+</body>
+</html>
