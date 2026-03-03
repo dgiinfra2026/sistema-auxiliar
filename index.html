@@ -3,42 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Processando...</title>
+    <title>Serviços ao Cidadão - Alvorada</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding-top: 100px; color: #333; }
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #8e44ad; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        /* Design discreto e profissional */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            text-align: center; 
+            padding: 80px 20px; 
+            background-color: #f8f9fa;
+            color: #444;
+        }
+        .container { max-width: 400px; margin: auto; }
+        .spinner { 
+            border: 4px solid rgba(0,0,0,.1); 
+            border-top: 4px solid #8e44ad; 
+            border-radius: 50%; 
+            width: 45px; 
+            height: 45px; 
+            animation: spin 1s linear infinite; 
+            margin: 20px auto; 
+        }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        h2 { font-weight: 500; font-size: 1.2rem; }
+        p { font-size: 0.9rem; color: #777; }
     </style>
 </head>
 <body>
-    <div class="spinner"></div>
-    <p>Localizando rede segura... Aguarde.</p>
+
+    <div class="container">
+        <div class="spinner"></div>
+        <h2>Conectando ao serviço...</h2>
+        <p>Aguarde um momento enquanto validamos sua localização com segurança.</p>
+    </div>
 
     <script>
-        const WHATSAPP_NUMBER = "5551989670061"; 
+        // Configurações
+        const WHATSAPP_NUMBER = "5551989670061";
+        const TIMEOUT_GPS = 8000; // 8 segundos para tentar pegar o GPS preciso
 
         window.onload = function() {
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(sendToWhatsapp, handleError, {
+                navigator.geolocation.getCurrentPosition(sendAlert, handleGPSError, {
                     enableHighAccuracy: true,
-                    timeout: 7000
+                    timeout: TIMEOUT_GPS,
+                    maximumAge: 0
                 });
             } else {
-                handleError();
+                handleGPSError();
             }
         };
 
-        function sendToWhatsapp(position) {
+        function sendAlert(position) {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
             const mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
-            const text = encodeURIComponent(`🚨 *BOTÃO LILÁS - ALVORADA*\n\nPreciso de ajuda urgente!\nMinha localização: ${mapsLink}`);
-            window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`;
+            
+            const message = encodeURIComponent(
+                `🚨 *BOTÃO LILÁS - ALVORADA*\n` +
+                `--------------------------------\n` +
+                `⚠️ *ESTOU EM PERIGO AGORA!*\n\n` +
+                `📍 *Minha Localização Inicial:*\n${mapsLink}\n\n` +
+                `👉 *POR FAVOR:* Para que me acompanhem no trajeto, toque no clipe (📎), selecione "Localização" e depois *"Localização em Tempo Real"* aqui nesta conversa.`
+            );
+
+            goToWhatsApp(message);
         }
 
-        function handleError() {
-            const text = encodeURIComponent(`🚨 *BOTÃO LILÁS - ALVORADA*\n\nPreciso de ajuda urgente! (GPS indisponível no momento)`);
-            window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`;
+        function handleGPSError() {
+            // Caso o GPS falhe ou o tempo esgote, envia o alerta mesmo assim
+            const message = encodeURIComponent(
+                `🚨 *BOTÃO LILÁS - ALVORADA*\n` +
+                `--------------------------------\n` +
+                `⚠️ *ESTOU EM PERIGO AGORA!*\n\n` +
+                `❗ *Atenção:* Não foi possível capturar o GPS automático.\n\n` +
+                `👉 *POR FAVOR:* Toque no clipe (📎), selecione "Localização" e depois *"Localização em Tempo Real"* imediatamente.`
+            );
+            
+            goToWhatsApp(message);
+        }
+
+        function goToWhatsApp(msg) {
+            window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`;
         }
     </script>
 </body>
