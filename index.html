@@ -3,75 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Serviços - Alvorada</title>
+    <title>SOS Alvorada</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding-top: 100px; background: #f9f9f9; color: #444; }
-        .loader { border: 5px solid #f3f3f3; border-top: 5px solid #8e44ad; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 20px auto; }
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; background: #f4f4f4; }
+        .loader { border: 16px solid #f3f3f3; border-top: 16px solid #8e44ad; border-radius: 50%; width: 60px; height: 60px; animation: spin 2s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
+    <h2>Acionando Ajuda...</h2>
+    <p>Aguarde, capturando sua localização segura...</p>
     <div class="loader"></div>
-    <p id="status">Validando acesso seguro...</p>
 
     <script>
-        // --- CONFIGURAÇÕES DE SEGURANÇA ---
         const WHATSAPP_NUMBER = "5551989670061";
-        const SECURITY_TOKEN = "ALVORADA_SAFE_2026"; // Token para evitar uso indevido externo
 
-        // 1. Verifica se o acesso é legítimo via URL (Ex: ?token=ALVORADA_SAFE_2026)
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('token') !== SECURITY_TOKEN) {
-            document.getElementById('status').innerText = "Acesso negado. Origem não autorizada.";
-            document.querySelector('.loader').style.display = 'none';
-            throw new Error("Token inválido");
-        }
-
-        // 2. Tenta capturar a localização assim que o token é validado
         window.onload = function() {
-            document.getElementById('status').innerText = "Obtendo localização de emergência...";
-            
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(sendFullAlert, sendFallbackAlert, {
+                // Solicita alta precisão (GPS)
+                navigator.geolocation.getCurrentPosition(redirectToWhatsApp, showError, {
                     enableHighAccuracy: true,
-                    timeout: 10000, // Espera até 10 segundos por sinal GPS de alta precisão
-                    maximumAge: 0
+                    timeout: 5000 // 5 segundos
                 });
             } else {
-                sendFallbackAlert();
+                alert("Erro de localização. Realize o procedimento no botão novamente.");
             }
         };
 
-        // CASO SUCESSO: Envia Coordenadas + Instrução de Tempo Real
-        function sendFullAlert(position) {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            const mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
+        function redirectToWhatsApp(position) {
+            const lat = position.coords.latitude; // capturando as latitude (x)
+            const lon = position.coords.longitude; // capturando longitude (y)
+            const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
             
-            const message = encodeURIComponent(
-                `🚨 *BOTÃO LILÁS - ALVORADA*\n` +
-                `⚠️ *SOCORRO IMEDIATO!*\n\n` +
-                `📍 *MINHA LOCALIZAÇÃO ATUAL:*\n${mapsLink}\n\n` +
-                `👉 *AÇÃO NECESSÁRIA:* Para que eu seja acompanhada no mapa, clique no 📎 (clipe) ou + e selecione "Localização em Tempo Real" agora!`
-            );
+            // Monta a mensagem para o wa.me
+            const message = encodeURIComponent(`🚨 *BOTÃO LILÁS - ALVORADA*\nESTOU EM PERIGO!\nMinha localização: ${mapsUrl}`);
             
-            redirect(message);
+            // Redireciona para o WhatsApp
+            window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
         }
 
-        // CASO FALHA (GPS desligado ou erro): Envia Alerta de Emergência sem coordenadas
-        function sendFallbackAlert() {
-            const message = encodeURIComponent(
-                `🚨 *BOTÃO LILÁS - ALVORADA*\n` +
-                `⚠️ *SOCORRO IMEDIATO!*\n\n` +
-                `❗ *ALERTA:* O GPS do meu aparelho não pôde ser capturado automaticamente.\n\n` +
-                `👉 *POR FAVOR:* Clique no 📎 (clipe) ou + e selecione "LOCALIZAÇÃO EM TEMPO REAL" imediatamente para que me encontrem!`
-            );
-            
-            redirect(message);
-        }
-
-        function redirect(msg) {
-            window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`;
+        function showError(error) {
+            // Se o GPS falhar, envia pelo menos o alerta sem coordenadas
+            const message = encodeURIComponent(`🚨 *BOTÃO LILÁS - ALVORADA*\nESTOU EM PERIGO! (GPS desativado)`);
+            window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
         }
     </script>
 </body>
