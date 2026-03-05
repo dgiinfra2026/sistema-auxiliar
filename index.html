@@ -80,6 +80,7 @@
                 document.getElementById('error-title').innerText = "ACESSO BLOQUEADO";
                 document.getElementById('step-by-step').style.display = 'block';
                 document.getElementById('error-msg').innerHTML = "Você recusou o acesso anteriormente. Siga os passos abaixo para liberar:";
+                getlocation();
             } 
             else {
                 document.getElementById('error-msg').innerText = "Não conseguimos sinal do GPS. Verifique se o GPS do celular está ligado e tente de novo.";
