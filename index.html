@@ -13,41 +13,47 @@
         .btn-retry { background: #8e44ad; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 18px; cursor: pointer; margin-top: 20px; font-weight: bold; width: 100%; }
         h2 { color: #8e44ad; }
         .alert-icon { font-size: 50px; color: #c0392b; margin-bottom: 10px; }
+        .instruction-box { text-align: left; background: #fff3f3; padding: 15px; border-radius: 8px; font-size: 14px; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
 
     <div id="main-screen">
         <h2>Acionando Ajuda...</h2>
-        <p id="loading-text">Aguarde, capturando sua localização segura...</p>
+        <p>Aguarde, capturando sua localização segura...</p>
         <div class="loader"></div>
     </div>
 
     <div id="error-screen">
         <div class="alert-icon">⚠️</div>
-        <h2 id="error-title" style="color: #c0392b;">GPS OBRIGATÓRIO</h2>
-        <p id="error-msg">Para sua segurança, o <strong>Botão Lilás</strong> só funciona com a localização ativada.</p>
-        <div style="text-align: left; background: #fff3f3; padding: 15px; border-radius: 8px; font-size: 14px;">
-            1. Ative o GPS do seu celular.<br>
-            2. Clique no botão abaixo.<br>
-            3. <strong>Autorize</strong> o acesso quando o navegador perguntar.
+        <h2 id="error-title" style="color: #c0392b;">AÇÃO NECESSÁRIA</h2>
+        <p id="error-msg">O <strong>Botão Lilás</strong> precisa da sua localização para que a ajuda chegue até você.</p>
+        
+        <div id="step-by-step" class="instruction-box">
+            <strong>Como permitir agora:</strong><br>
+            1. Toque no ícone de <strong>Cadeado</strong> ou <strong>Configurações</strong> (ao lado do endereço do site no topo).<br>
+            2. Ative a opção <strong>"Localização"</strong>.<br>
+            3. Recarregue a página e tente novamente.
         </div>
-        <button class="btn-retry" onclick="getLocation()">ATIVAR E TENTAR NOVAMENTE</button>
+
+        <button class="btn-retry" onclick="getLocation()">PERMITIR E TENTAR NOVAMENTE</button>
     </div>
 
     <script>
         const WHATSAPP_NUMBER = "5551989670061";
 
         function getLocation() {
-            // Reseta a interface para o estado de busca
+            // Volta para a tela de carregamento para tentar de novo
             document.getElementById('main-screen').style.display = 'block';
             document.getElementById('error-screen').style.display = 'none';
+            document.getElementById('step-by-step').style.display = 'none';
 
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(sendDirectToWhatsapp, handleLocationError, {
-                    enableHighAccuracy: true, // Força uso do GPS (Satélite)
-                    timeout: 10000,          // Aumentado para 10s para maior chance de sucesso
-                    maximumAge: 0            // Garante que não use localização antiga/cacheada
+                // Tenta disparar o pedido nativo do navegador
+                navigator.geolocation.getCurrentPosition(sendDirectToWhatsapp, handleForceError, {
+                    enableHighAccuracy: true,
+                    timeout: 8000,
+                    maximumAge: 0 // Força o navegador a tentar ler de novo, sem usar cache
                 });
             } else {
                 alert("Seu aparelho não suporta GPS.");
@@ -57,28 +63,30 @@
         function sendDirectToWhatsapp(position) {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
-            
-            // CORREÇÃO: Sintaxe de interpolação corrigida (${lat}) e URL padrão Google Maps
             const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
             
             const message = encodeURIComponent(`🚨 *BOTÃO LILÁS - ALVORADA*\n\nESTOU EM PERIGO!\nMinha localização: ${mapsUrl}`);
             
-            // Redirecionamento direto via protocolo nativo
+            // PROTOCOLO NATIVO: Pula a tela do navegador e vai direto pro App
             window.location.href = `whatsapp://send?phone=${WHATSAPP_NUMBER}&text=${message}`;
         }
 
-        function handleLocationError(error) {
+        function handleForceError(error) {
             document.getElementById('main-screen').style.display = 'none';
             document.getElementById('error-screen').style.display = 'block';
 
-            // Se o usuário recusou explicitamente (error.code === 1)
+            // Erro 1 significa "Permission Denied" (Usuário recusou)
             if (error.code === 1) {
-                document.getElementById('error-title').innerText = "PERMISSÃO NEGADA";
-                document.getElementById('error-msg').innerHTML = "Você recusou o acesso à localização. O sistema não pode prosseguir sem saber onde você está. <br><br><strong>Como resolver:</strong> Clique no ícone de 'Cadeado' na barra de endereços do seu navegador e limpe as permissões para tentar novamente.";
+                document.getElementById('error-title').innerText = "ACESSO BLOQUEADO";
+                document.getElementById('step-by-step').style.display = 'block';
+                document.getElementById('error-msg').innerHTML = "Você recusou o acesso anteriormente. Siga os passos abaixo para liberar:";
+            } 
+            else {
+                document.getElementById('error-msg').innerText = "Não conseguimos sinal do GPS. Verifique se o GPS do celular está ligado e tente de novo.";
             }
         }
 
-        // Tenta a captura automática ao abrir a página
+        // Tenta capturar automaticamente assim que o link é aberto
         window.onload = getLocation;
     </script>
 </body>
