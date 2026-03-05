@@ -19,19 +19,19 @@
 
     <div id="main-screen">
         <h2>Acionando Ajuda...</h2>
-        <p>Aguarde, capturando sua localização segura...</p>
+        <p id="loading-text">Aguarde, capturando sua localização segura...</p>
         <div class="loader"></div>
     </div>
 
     <div id="error-screen">
         <div class="alert-icon">⚠️</div>
-        <h2 style="color: #c0392b;">GPS OBRIGATÓRIO</h2>
-        <p>Para sua segurança, o <strong>Botão Lilás</strong> só funciona com a localização ativada.</p>
-        <p style="text-align: left; background: #fff3f3; padding: 15px; border-radius: 8px; font-size: 14px;">
+        <h2 id="error-title" style="color: #c0392b;">GPS OBRIGATÓRIO</h2>
+        <p id="error-msg">Para sua segurança, o <strong>Botão Lilás</strong> só funciona com a localização ativada.</p>
+        <div style="text-align: left; background: #fff3f3; padding: 15px; border-radius: 8px; font-size: 14px;">
             1. Ative o GPS do seu celular.<br>
             2. Clique no botão abaixo.<br>
-            3. Permita o acesso à localização quando o navegador perguntar.
-        </p>
+            3. <strong>Autorize</strong> o acesso quando o navegador perguntar.
+        </div>
         <button class="btn-retry" onclick="getLocation()">ATIVAR E TENTAR NOVAMENTE</button>
     </div>
 
@@ -39,14 +39,15 @@
         const WHATSAPP_NUMBER = "5551989670061";
 
         function getLocation() {
-            // Volta para a tela de processamento
+            // Reseta a interface para o estado de busca
             document.getElementById('main-screen').style.display = 'block';
             document.getElementById('error-screen').style.display = 'none';
 
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(sendDirectToWhatsapp, showForceError, {
-                    enableHighAccuracy: true,
-                    timeout: 8000 // Aguarda 8 segundos por um sinal preciso
+                navigator.geolocation.getCurrentPosition(sendDirectToWhatsapp, handleLocationError, {
+                    enableHighAccuracy: true, // Força uso do GPS (Satélite)
+                    timeout: 10000,          // Aumentado para 10s para maior chance de sucesso
+                    maximumAge: 0            // Garante que não use localização antiga/cacheada
                 });
             } else {
                 alert("Seu aparelho não suporta GPS.");
@@ -56,22 +57,28 @@
         function sendDirectToWhatsapp(position) {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
-            // Link do Maps otimizado para mobile
+            
+            // CORREÇÃO: Sintaxe de interpolação corrigida (${lat}) e URL padrão Google Maps
             const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
             
             const message = encodeURIComponent(`🚨 *BOTÃO LILÁS - ALVORADA*\n\nESTOU EM PERIGO!\nMinha localização: ${mapsUrl}`);
             
-            // PROTOCOLO NATIVO: Abre o app direto sem a tela de "Abrir App" do navegador
+            // Redirecionamento direto via protocolo nativo
             window.location.href = `whatsapp://send?phone=${WHATSAPP_NUMBER}&text=${message}`;
         }
 
-        function showForceError(error) {
-            // Se falhar (usuário negou ou GPS off), trava na tela de erro
+        function handleLocationError(error) {
             document.getElementById('main-screen').style.display = 'none';
             document.getElementById('error-screen').style.display = 'block';
+
+            // Se o usuário recusou explicitamente (error.code === 1)
+            if (error.code === 1) {
+                document.getElementById('error-title').innerText = "PERMISSÃO NEGADA";
+                document.getElementById('error-msg').innerHTML = "Você recusou o acesso à localização. O sistema não pode prosseguir sem saber onde você está. <br><br><strong>Como resolver:</strong> Clique no ícone de 'Cadeado' na barra de endereços do seu navegador e limpe as permissões para tentar novamente.";
+            }
         }
 
-        // Inicia a tentativa automática ao abrir a página
+        // Tenta a captura automática ao abrir a página
         window.onload = getLocation;
     </script>
 </body>
