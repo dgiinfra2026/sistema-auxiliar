@@ -3,103 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Autoatendimento - Alvorada</title>
+    <title>SOS Alvorada</title>
     <style>
-        /* --- ESTILOS DO PORTAL --- */
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; background-color: #f8f9fa; color: #333; height: 150vh; }
-        .top-nav { background-color: #1e5631; color: white; padding: 10px 50px; display: flex; gap: 20px; font-size: 14px; }
-        .header-main { background: white; padding: 20px 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; }
-        .logo-box { display: flex; align-items: center; gap: 15px; }
-        .logo-box h1 { font-size: 22px; margin: 0; color: #444; }
-        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; text-align: center; }
-        .welcome-text { color: #1e5631; font-weight: bold; margin-bottom: 30px; }
-        .search-container { display: flex; max-width: 800px; margin: 0 auto 50px; }
-        .search-input { flex: 1; padding: 15px; border: 1px solid #ccc; border-radius: 5px 0 0 5px; outline: none; }
-        .search-btn { background: #27ae60; color: white; border: none; padding: 0 25px; border-radius: 0 5px 5px 0; cursor: pointer; }
-        .perfis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; margin-top: 50px; }
-        .perfil-card { background: white; padding: 20px; border-radius: 8px; border: 1px solid #eee; text-align: center; }
-        .icon { font-size: 30px; color: #27ae60; margin-bottom: 10px; }
-
-        /* --- ANIMAÇÃO DE PULSAÇÃO --- */
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(142, 68, 173, 0.7); }
-            70% { box-shadow: 0 0 0 20px rgba(142, 68, 173, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(142, 68, 173, 0); }
-        }
-
-        /* --- O BOTÃO LILÁS DE ALERTA --- */
-        .btn-alerta-lilas {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 85px;
-            height: 85px;
-            background-color: #8e44ad; /* Lilás */
-            border-radius: 50%;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: 4px solid white;
-            text-decoration: none;
-            
-            /* Aplica a animação de pulsação continuamente */
-            animation: pulse-red 2s infinite;
-        }
-
-        /* Estilo do ícone de Alerta (Triângulo) */
-        .btn-alerta-lilas svg {
-            width: 45px;
-            height: 45px;
-            fill: white;
-        }
-
-        .btn-alerta-lilas:hover {
-            transform: scale(1.1);
-            background-color: #7d3c98;
-            animation: none; /* Para de pulsar quando o mouse está em cima */
-        }
+        body { font-family: sans-serif; text-align: center; padding: 50px 20px; background: #f4f4f4; color: #333; }
+        .loader { border: 10px solid #f3f3f3; border-top: 10px solid #8e44ad; border-radius: 50%; width: 50px; height: 50px; animation: spin 2s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        #error-screen { display: none; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .btn-retry { background: #8e44ad; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 18px; cursor: pointer; margin-top: 20px; font-weight: bold; width: 100%; }
+        h2 { color: #8e44ad; }
+        .alert-icon { font-size: 50px; color: #c0392b; margin-bottom: 10px; }
+        .instruction-box { text-align: left; background: #fff3f3; padding: 15px; border-radius: 8px; font-size: 14px; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
 
-    <div class="top-nav">
-        <span>Início 🟢</span><span>Conteúdo 🟢</span><span>Busca 🟢</span>
+    <div id="main-screen">
+        <h2>Acionando Ajuda...</h2>
+        <p>Aguarde, capturando sua localização segura...</p>
+        <div class="loader"></div>
     </div>
 
-    <div class="header-main">
-        <div class="logo-box">
-            <div style="width: 40px; height: 50px; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 8px;">BRASÃO</div>
-            <div>
-                <h1>AUTOATENDIMENTO</h1>
-                <small>MUNICÍPIO DE ALVORADA</small>
-            </div>
+    <div id="error-screen">
+        <div class="alert-icon">⚠️</div>
+        <h2 id="error-title" style="color: #c0392b;">AÇÃO NECESSÁRIA</h2>
+        <p id="error-msg">O <strong>Botão Lilás</strong> precisa da sua localização para que a ajuda chegue até você.</p>
+        
+        <div id="step-by-step" class="instruction-box">
+            <strong>Como permitir agora:</strong><br>
+            1. Toque no ícone de <strong>Cadeado</strong> ou <strong>Configurações</strong> (ao lado do endereço do site no topo).<br>
+            2. Ative a opção <strong>"Localização"</strong>.<br>
+            3. Recarregue a página e tente novamente.
         </div>
+
+        <button class="btn-retry" onclick="getLocation()">PERMITIR E TENTAR NOVAMENTE</button>
     </div>
 
-    <div class="container">
-        <p class="welcome-text">SISTEMA DE APOIO AO CIDADÃO</p>
+    <script>
+        const WHATSAPP_NUMBER = "555130448527"; // número temporário ...
+        
+        function getLocation() {
+            // Volta para a tela de carregamento para tentar de novo
+            document.getElementById('main-screen').style.display = 'block';
+            document.getElementById('error-screen').style.display = 'none';
+            document.getElementById('step-by-step').style.display = 'none';
 
-        <div class="search-container">
-            <input type="text" class="search-input" placeholder="O que você procura?">
-            <button class="search-btn">🔍</button>
-        </div>
+            if (navigator.geolocation) {
+                // Tenta disparar o pedido nativo do navegador
+                navigator.geolocation.getCurrentPosition(sendDirectToWhatsapp, handleForceError, {
+                    enableHighAccuracy: true,
+                    timeout: 8000,
+                    maximumAge: 0 // Força o navegador a tentar ler de novo, sem usar cache
+                });
+            } else {
+                alert("Seu aparelho não suporta GPS.");
+            }
+        }
 
-        <div class="perfis-grid">
-            <div class="perfil-card"><div class="icon">👤</div>Cidadão</div>
-            <div class="perfil-card"><div class="icon">💼</div>Trabalho</div>
-            <div class="perfil-card"><div class="icon">🏘️</div>Urbanismo</div>
-            <div class="perfil-card"><div class="icon">📈</div>Fazenda</div>
-        </div>
-    </div>
+        function sendDirectToWhatsapp(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+            
+            const message = encodeURIComponent(`🚨 *BOTÃO LILÁS - ALVORADA*\n\nESTOU EM PERIGO!\nMinha localização: ${mapsUrl}`);
+            
+            // PROTOCOLO NATIVO: Pula a tela do navegador e vai direto pro App
+            window.location.href = `whatsapp://send?phone=${WHATSAPP_NUMBER}&text=${message}`;
+        }
 
-    <a href="whatsapp.html" class="btn-alerta-lilas" title="PEDIR SOCORRO">
-        <svg viewBox="0 0 24 24">
-            <path d="M12,2L1,21H23L12,2M12,6L19.53,19H4.47L12,6M11,10V14H13V10H11M11,16V18H13V16H11Z" />
-        </svg>
-    </a>
+        function handleForceError(error) {
+            document.getElementById('main-screen').style.display = 'none';
+            document.getElementById('error-screen').style.display = 'block';
 
+            // Erro 1 significa "Permission Denied" (Usuário recusou)
+            if (error.code === 1) {
+                document.getElementById('error-title').innerText = "ACESSO BLOQUEADO";
+                document.getElementById('step-by-step').style.display = 'block';
+                document.getElementById('error-msg').innerHTML = "Você recusou o acesso anteriormente. Siga os passos abaixo para liberar:";
+            } 
+            else {
+                document.getElementById('error-msg').innerText = "Não conseguimos sinal do GPS. Verifique se o Wi-Fi, e o GPS do seu celular está ligado e tente de novo.";
+            }
+        }
+
+        // Tenta capturar automaticamente assim que o link é aberto
+        window.onload = getLocation;
+    </script>
 </body>
 </html>
