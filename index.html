@@ -34,23 +34,38 @@
         
         <div id="step-by-step" class="instruction-box">
             <strong>Como permitir agora:</strong><br>
-            1. Toque no ícone de <strong>Cadeado</strong> ou <strong>Configurações</strong> (ao lado do endereço do site no topo).<br>
-            2. Ative a opção <strong>"Localização"</strong>.<br>
-            3. Recarregue a página e tente novamente.
+            1. No topo da tela, toque no ícone de <strong>Compartilhar</strong> ou <strong>Três Pontinhos</strong>.<br>
+            2. Selecione <strong>"Abrir no Navegador"</strong> ou <strong>"Abrir no Chrome/Safari"</strong>.<br>
+            3. Isso garantirá que o GPS funcione corretamente.
         </div>
 
-        <button class="btn-retry" onclick="getLocation()">PERMITIR E TENTAR NOVAMENTE</button>
+        <button class="btn-retry" onclick="getLocation()">TENTAR NOVAMENTE</button>
     </div>
 
     <script>
-        const WHATSAPP_NUMBER = "5551992056442";
+        // 1. FUNÇÃO PARA FORÇAR A SAÍDA DA WEBVIEW
+        (function forceExternalBrowser() {
+            const url = window.location.href;
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            const isAndroid = /Android/i.test(ua);
+            const isIOS = /iPhone|iPad|iPod/i.test(ua);
+            const isWebView = /wv|WebView|FBAN|FBAV|Instagram|MicroMessenger/i.test(ua);
+
+            if (isWebView) {
+                if (isAndroid) {
+                    // Força a abertura no Chrome via Intent
+                    const chromeIntent = `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
+                    window.location.href = chromeIntent;
+                }
+            }
+        })();
+
+        const WHATSAPP_NUMBER = "5551992056442"; 
         
         function getLocation() {
-            // LIMPEZA DE CACHE DE DADOS (LocalStorage e Session)
             localStorage.clear();
             sessionStorage.clear();
 
-            // Volta para a tela de carregamento
             document.getElementById('main-screen').style.display = 'block';
             document.getElementById('error-screen').style.display = 'none';
             document.getElementById('step-by-step').style.display = 'none';
@@ -70,31 +85,34 @@
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
             
-            // CORREÇÃO: Sintaxe correta ${lat} e ${lon}
-            const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+            // CORREÇÃO: Sintaxe ${lat} e ${lon} corrigida (estava como 0{lat})
+            const mapsUrl = `http://maps.google.com/maps?q=${lat},${lon}`;
             
             const messageText = `🚨 *BOTÃO LILÁS - ALVORADA*\n\nESTOU EM PERIGO!\nMinha localização: ${mapsUrl}`;
             const message = encodeURIComponent(messageText);
             
-            // CORREÇÃO: Uso de wa.me para evitar erro de "Handler" no console
             window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
         }
 
         function handleForceError(error) {
-            document.getElementById('main-screen').style.display = 'none';
-            document.getElementById('error-screen').style.display = 'block';
-
-            if (error.code === 1) { // Permission Denied
+            if (error.code === 1) {
+                const userChoice = confirm("A localização é obrigatória. Deseja tentar autorizar o acesso agora?");
+                if (userChoice) {
+                    getLocation();
+                    return;
+                }
                 document.getElementById('error-title').innerText = "ACESSO BLOQUEADO";
+                document.getElementById('error-msg').innerHTML = "O sistema negou o GPS. Autorize nas configurações do seu navegador.";
                 document.getElementById('step-by-step').style.display = 'block';
-                document.getElementById('error-msg').innerHTML = "Você recusou o acesso anteriormente. Siga os passos abaixo para liberar:";
             } 
             else {
-                document.getElementById('error-msg').innerText = "Não conseguimos sinal do GPS. Verifique se o Wi-Fi e o GPS estão ligados.";
+                document.getElementById('error-msg').innerText = "Sinal de GPS fraco. Certifique-se de que está em local aberto.";
             }
+
+            document.getElementById('main-screen').style.display = 'none';
+            document.getElementById('error-screen').style.display = 'block';
         }
 
-        // Tenta capturar automaticamente
         window.onload = getLocation;
     </script>
 </body>
