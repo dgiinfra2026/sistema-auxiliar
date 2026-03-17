@@ -40,25 +40,21 @@
     </div>
 
     <script>
-        const WHATSAPP_NUMBER = "555130448527"; 
-
-        // 1. Remova o window.onload = getLocation;
-        // Deixaremos o usuário clicar para garantir que o navegador aceite o pedido.
-
+        const WHATSAPP_NUMBER = "555130448527"; // número temporário ...
+        
         function getLocation() {
-            // Mostra a tela de carregamento
+            // Volta para a tela de carregamento para tentar de novo
             document.getElementById('main-screen').style.display = 'block';
             document.getElementById('error-screen').style.display = 'none';
-
-            const options = {
-                enableHighAccuracy: true,
-                timeout: 10000, // Aumentado para 10s para dar tempo ao satélite
-                maximumAge: 0 
-            };
+            document.getElementById('step-by-step').style.display = 'none';
 
             if (navigator.geolocation) {
-                // O navegador só libera o GPS se esta função for chamada por um CLIQUE
-                navigator.geolocation.getCurrentPosition(sendDirectToWhatsapp, handleForceError, options);
+                // Tenta disparar o pedido nativo do navegador
+                navigator.geolocation.getCurrentPosition(sendDirectToWhatsapp, handleForceError, {
+                    enableHighAccuracy: true,
+                    timeout: 8000,
+                    maximumAge: 0 // Força o navegador a tentar ler de novo, sem usar cache
+                });
             } else {
                 alert("Seu aparelho não suporta GPS.");
             }
@@ -68,12 +64,14 @@
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
             
-            // CORREÇÃO: Usar ${lat} com o cifrão para que o JS entenda a variável
+            // Link padrão do Google Maps (mais confiável para visualização)
             const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
             
+            // Montagem da mensagem
             const messageText = `🚨 *BOTÃO LILÁS - ALVORADA*\n\nESTOU EM PERIGO!\nMinha localização: ${mapsUrl}`;
             const message = encodeURIComponent(messageText);
             
+            // Substituição pelo wa.me
             window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
         }
 
@@ -90,8 +88,10 @@
             else {
                 document.getElementById('error-msg').innerText = "Não conseguimos sinal do GPS. Verifique se o Wi-Fi, e o GPS do seu celular está ligado e tente de novo.";
             }
-
         }
+
+        // Tenta capturar automaticamente assim que o link é aberto
+        window.onload = getLocation;
     </script>
 </body>
 </html>
