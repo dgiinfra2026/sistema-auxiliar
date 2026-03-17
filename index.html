@@ -43,20 +43,23 @@
     </div>
 
     <script>
-        const WHATSAPP_NUMBER = "555130448527"; // número temporário ...
+        const WHATSAPP_NUMBER = "555130448527"; 
         
         function getLocation() {
-            // Volta para a tela de carregamento para tentar de novo
+            // LIMPEZA DE CACHE DE DADOS (LocalStorage e Session)
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // Volta para a tela de carregamento
             document.getElementById('main-screen').style.display = 'block';
             document.getElementById('error-screen').style.display = 'none';
             document.getElementById('step-by-step').style.display = 'none';
 
             if (navigator.geolocation) {
-                // Tenta disparar o pedido nativo do navegador
                 navigator.geolocation.getCurrentPosition(sendDirectToWhatsapp, handleForceError, {
                     enableHighAccuracy: true,
                     timeout: 8000,
-                    maximumAge: 0 // Força o navegador a tentar ler de novo, sem usar cache
+                    maximumAge: 0 
                 });
             } else {
                 alert("Seu aparelho não suporta GPS.");
@@ -67,14 +70,13 @@
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
             
-            // Link padrão do Google Maps (mais confiável para visualização)
+            // CORREÇÃO: Sintaxe correta ${lat} e ${lon}
             const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
             
-            // Montagem da mensagem
             const messageText = `🚨 *BOTÃO LILÁS - ALVORADA*\n\nESTOU EM PERIGO!\nMinha localização: ${mapsUrl}`;
             const message = encodeURIComponent(messageText);
             
-            // Substituição pelo wa.me
+            // CORREÇÃO: Uso de wa.me para evitar erro de "Handler" no console
             window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
         }
 
@@ -82,18 +84,17 @@
             document.getElementById('main-screen').style.display = 'none';
             document.getElementById('error-screen').style.display = 'block';
 
-            // Erro 1 significa "Permission Denied" (Usuário recusou)
-            if (error.code === 1) {
+            if (error.code === 1) { // Permission Denied
                 document.getElementById('error-title').innerText = "ACESSO BLOQUEADO";
                 document.getElementById('step-by-step').style.display = 'block';
                 document.getElementById('error-msg').innerHTML = "Você recusou o acesso anteriormente. Siga os passos abaixo para liberar:";
             } 
             else {
-                document.getElementById('error-msg').innerText = "Não conseguimos sinal do GPS. Verifique se o Wi-Fi, e o GPS do seu celular está ligado e tente de novo.";
+                document.getElementById('error-msg').innerText = "Não conseguimos sinal do GPS. Verifique se o Wi-Fi e o GPS estão ligados.";
             }
         }
 
-        // Tenta capturar automaticamente assim que o link é aberto
+        // Tenta capturar automaticamente
         window.onload = getLocation;
     </script>
 </body>
