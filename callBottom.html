@@ -3,57 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <meta http-equiv="refresh" content="0; url=callBottom.html/">
-    
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    
-    <title>Redirecionando...</title>
-    
+    <title>SOS Alvorada</title>
     <style>
-        body {
-            font-family: sans-serif;
-            text-align: center;
-            padding: 50px 20px;
-            background-color: #f4f4f4;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            height: 80vh;
-        }
-        .spinner {
-            border: 6px solid #f3f3f3;
-            border-top: 6px solid #8e44ad;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        a {
-            color: #8e44ad;
-            text-decoration: none;
-            font-weight: bold;
-        }
+        body { font-family: sans-serif; text-align: center; padding: 50px 20px; background: #f4f4f4; color: #333; }
+        .loader { border: 10px solid #f3f3f3; border-top: 10px solid #8e44ad; border-radius: 50%; width: 50px; height: 50px; animation: spin 2s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        #error-screen { display: none; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .btn-retry { background: #8e44ad; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 18px; cursor: pointer; margin-top: 20px; font-weight: bold; width: 100%; }
+        h2 { color: #8e44ad; }
+        .alert-icon { font-size: 50px; color: #c0392b; margin-bottom: 10px; }
+        .instruction-box { text-align: left; background: #fff3f3; padding: 15px; border-radius: 8px; font-size: 14px; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
 
-    <div class="spinner"></div>
+    <div id="main-screen">
+        <h2>Acionando Ajuda...</h2>
+        <p>Aguarde, capturando sua localização segura...</p>
+        <div class="loader"></div>
+    </div>
+
+    <div id="error-screen">
+        <div class="alert-icon">⚠️</div>
+        <h2 id="error-title" style="color: #c0392b;">AÇÃO NECESSÁRIA</h2>
+        <p id="error-msg">O <strong>Botão Lilás</strong> precisa da sua localização para que a ajuda chegue até você.</p>
+        
+        <div id="step-by-step" class="instruction-box">
+            <strong>Como permitir agora:</strong><br>
+            1. No topo da tela, toque no ícone de <strong>Compartilhar</strong> ou <strong>Três Pontinhos</strong>.<br>
+            2. Selecione <strong>"Abrir no Navegador"</strong> ou <strong>"Abrir no Chrome/Safari"</strong>.<br>
+            3. Isso garantirá que o GPS funcione corretamente.
+        </div>
+
+        <button class="btn-retry" onclick="getLocation()">TENTAR NOVAMENTE</button>
+    </div>
 
     <script>
-        // 2. Redirecionamento via JavaScript (Backup para WebViews)
-        // O setTimeout dá uma margem mínima para o HTML carregar antes de forçar a troca
-        setTimeout(function() {
-            window.location.replace("callBottom.html");
-        }, 100);
+        // 1. FUNÇÃO PARA FORÇAR A SAÍDA DA WEBVIEW
+        (function forceExternalBrowser() {
+            const url = window.location.href;
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            const isAndroid = /Android/i.test(ua);
+            const isIOS = /iPhone|iPad|iPod/i.test(ua);
+            const isWebView = /wv|WebView|FBAN|FBAV|Instagram|MicroMessenger/i.test(ua);
+
+            if (isWebView) {
+                if (isAndroid) {
+                    // Força a abertura no Chrome via Intent
+                    const chromeIntent = `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
+                    window.location.href = chromeIntent;
+                }
+            }
+        })();
+
+        const WHATSAPP_NUMBER = "5551992056442"; 
+        
+        function getLocation() {
+            localStorage.clear();
+            sessionStorage.clear();
+
+            document.getElementById('main-screen').style.display = 'block';
+            document.getElementById('error-screen').style.display = 'none';
+            document.getElementById('step-by-step').style.display = 'none';
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(sendDirectToWhatsapp, handleForceError, {
+                    enableHighAccuracy: true,
+                    timeout: 8000,
+                    maximumAge: 0 
+                });
+            } else {
+                alert("Seu aparelho não suporta GPS.");
+            }
+        }
+
+        function sendDirectToWhatsapp(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            // CORREÇÃO: Sintaxe ${lat} e ${lon} corrigida (estava como 0{lat})
+            const mapsUrl = `http://maps.google.com/maps?q=${lat},${lon}`;
+            
+            const messageText = `🚨 *BOTÃO LILÁS - ALVORADA*\n\nESTOU EM PERIGO!\nMinha localização: ${mapsUrl}`;
+            const message = encodeURIComponent(messageText);
+            
+            window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+        }
+
+        function handleForceError(error) {
+            if (error.code === 1) {
+                const userChoice = confirm("A localização é obrigatória. Deseja tentar autorizar o acesso agora?");
+                if (userChoice) {
+                    getLocation();
+                    return;
+                }
+                document.getElementById('error-title').innerText = "ACESSO BLOQUEADO";
+                document.getElementById('error-msg').innerHTML = "O sistema negou o GPS. Autorize nas configurações do seu navegador.";
+                document.getElementById('step-by-step').style.display = 'block';
+            } 
+            else {
+                document.getElementById('error-msg').innerText = "Sinal de GPS fraco. Certifique-se de que está em local aberto.";
+            }
+
+            document.getElementById('main-screen').style.display = 'none';
+            document.getElementById('error-screen').style.display = 'block';
+        }
+
+        window.onload = getLocation;
     </script>
 </body>
 </html>
