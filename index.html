@@ -63,12 +63,16 @@
         function sendDirectToWhatsapp(position) {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
+            
+            // Link padrão do Google Maps (mais confiável para visualização)
             const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
             
-            const message = encodeURIComponent(`🚨 *BOTÃO LILÁS - ALVORADA*\n\nESTOU EM PERIGO!\nMinha localização: ${mapsUrl}`);
+            // Montagem da mensagem
+            const messageText = `🚨 *BOTÃO LILÁS - ALVORADA*\n\nESTOU EM PERIGO!\nMinha localização: ${mapsUrl}`;
+            const message = encodeURIComponent(messageText);
             
-            // PROTOCOLO NATIVO: Pula a tela do navegador e vai direto pro App
-            window.location.href = `whatsapp://send?phone=${WHATSAPP_NUMBER}&text=${message}`;
+            // Substituição pelo wa.me
+            window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
         }
 
         function handleForceError(error) {
