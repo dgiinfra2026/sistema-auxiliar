@@ -3,57 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <meta http-equiv="refresh" content="0; url=callBottom.html/">
-    
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    
-    <title>Redirecionando...</title>
-    
+    <title>SOS Alvorada</title>
     <style>
-        body {
-            font-family: sans-serif;
-            text-align: center;
-            padding: 50px 20px;
-            background-color: #f4f4f4;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            height: 80vh;
-        }
-        .spinner {
-            border: 6px solid #f3f3f3;
-            border-top: 6px solid #8e44ad;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        a {
-            color: #8e44ad;
-            text-decoration: none;
-            font-weight: bold;
-        }
+        body { font-family: sans-serif; text-align: center; padding: 50px 20px; background: #f4f4f4; color: #333; }
+        .loader { border: 10px solid #f3f3f3; border-top: 10px solid #8e44ad; border-radius: 50%; width: 50px; height: 50px; animation: spin 2s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        #error-screen { display: none; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .btn-retry { background: #8e44ad; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 18px; cursor: pointer; margin-top: 20px; font-weight: bold; width: 100%; }
+        h2 { color: #8e44ad; }
+        .alert-icon { font-size: 50px; color: #c0392b; margin-bottom: 10px; }
+        .instruction-box { text-align: left; background: #fff3f3; padding: 15px; border-radius: 8px; font-size: 14px; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
 
-    <div class="spinner"></div>
+    <div id="main-screen">
+        <h2>Acionando Ajuda...</h2>
+        <p>Aguarde, capturando sua localização segura...</p>
+        <div class="loader"></div>
+    </div>
+
+    <div id="error-screen">
+        <div class="alert-icon">⚠️</div>
+        <h2 id="error-title" style="color: #c0392b;">AÇÃO NECESSÁRIA</h2>
+        <p id="error-msg">O <strong>Botão Lilás</strong> precisa da sua localização para que a ajuda chegue até você.</p>
+        
+        <div id="step-by-step" class="instruction-box">
+            <strong>Como permitir agora:</strong><br>
+            1. Toque no ícone de <strong>Cadeado</strong> ou <strong>Configurações</strong> (ao lado do endereço do site no topo).<br>
+            2. Ative a opção <strong>"Localização"</strong>.<br>
+            3. Recarregue a página e tente novamente.
+        </div>
+
+        <button class="btn-retry" onclick="getLocation()">PERMITIR E TENTAR NOVAMENTE</button>
+    </div>
 
     <script>
-        // 2. Redirecionamento via JavaScript (Backup para WebViews)
-        // O setTimeout dá uma margem mínima para o HTML carregar antes de forçar a troca
-        setTimeout(function() {
-            window.location.replace("callBottom.html");
-        }, 100);
+        const WHATSAPP_NUMBER = "5551992056442";
+        
+        function getLocation() {
+            // Volta para a tela de carregamento para tentar de novo
+            document.getElementById('main-screen').style.display = 'block';
+            document.getElementById('error-screen').style.display = 'none';
+            document.getElementById('step-by-step').style.display = 'none';
+
+            if (navigator.geolocation) {
+                // Tenta disparar o pedido nativo do navegador
+                navigator.geolocation.getCurrentPosition(sendDirectToWhatsapp, handleForceError, {
+                    enableHighAccuracy: true,
+                    timeout: 8000,
+                    maximumAge: 0 // Força o navegador a tentar ler de novo, sem usar cache
+                });
+            } else {
+                alert("Seu aparelho não suporta GPS.");
+            }
+        }
+
+        function sendDirectToWhatsapp(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            // Link padrão do Google Maps (mais confiável para visualização)
+            const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+            
+            // Montagem da mensagem
+            const messageText = `🚨 *BOTÃO LILÁS - ALVORADA*\n\nESTOU EM PERIGO!\nMinha localização: ${mapsUrl}`;
+            const message = encodeURIComponent(messageText);
+            
+            // Substituição pelo wa.me
+            window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${message}`;
+        }
+
+        function handleForceError(error) {
+            document.getElementById('main-screen').style.display = 'none';
+            document.getElementById('error-screen').style.display = 'block';
+
+            // Erro 1 significa "Permission Denied" (Usuário recusou)
+            if (error.code === 1) {
+                document.getElementById('error-title').innerText = "ACESSO BLOQUEADO";
+                document.getElementById('step-by-step').style.display = 'block';
+                document.getElementById('error-msg').innerHTML = "Você recusou o acesso anteriormente. Siga os passos abaixo para liberar:";
+            } 
+            else {
+                document.getElementById('error-msg').innerText = "Não conseguimos sinal do GPS. Verifique se o Wi-Fi, e o GPS do seu celular está ligado e tente de novo.";
+            }
+        }
+
+        // Tenta capturar automaticamente assim que o link é aberto
+        window.onload = getLocation;
     </script>
 </body>
 </html>
